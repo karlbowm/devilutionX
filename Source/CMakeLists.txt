@@ -196,7 +196,8 @@ if(DISCORD_INTEGRATION)
 endif()
 
 add_devilutionx_library(libdevilutionx OBJECT ${libdevilutionx_SRCS})
-target_include_directories(libdevilutionx PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+target_include_directories(libdevilutionx PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/rust_devil)
 
 # Use file GENERATE instead of configure_file because configure_file
 # does not support generator expressions.
@@ -231,6 +232,7 @@ target_link_libraries(libdevilutionx PUBLIC
   libsmackerdec
   simpleini::simpleini
   hoehrmann_utf8
+  rust_devil
 )
 
 if(NOT NONET)

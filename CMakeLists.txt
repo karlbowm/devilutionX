@@ -204,6 +204,9 @@ include(Dependencies)
 
 add_subdirectory(Source)
 
+# Add the rust lib to the project, which will replace more and more of the CPP codebase
+add_subdirectory(rust_devil)
+
 set(BIN_TARGET devilutionx)
 if(NINTENDO_3DS)
   set(BIN_TARGET ${BIN_TARGET}.elf)

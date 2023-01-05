@@ -78,6 +78,7 @@
 #include "utils/stdcompat/string_view.hpp"
 #include "utils/utf8.hpp"
 
+#include "rust_devil.h"
 #ifdef __vita__
 #include "platform/vita/touch.h"
 #endif
