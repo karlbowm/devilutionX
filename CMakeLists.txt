@@ -16,6 +16,10 @@ endif()
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
+
+# cmake_policy(SET CMP0091 NEW)
+# set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+
 if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dist")
   message("-- Detected a source distribution with the required FetchContent dependencies and devilutionx.mpq included")
   set(SRC_DIST ON)
@@ -199,13 +203,49 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+include(FetchContent)
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+    set(Rust_CARGO_TARGET "x86_64-pc-windows-msvc") #TODO This fails under debug in msvc
+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+    set(Rust_CARGO_TARGET "x86_64-unknown-linux-gnu")
+else()
+    message(FATAL_ERROR "hardcoded platformchecks not supported outside windows-gnu and linux-gnu")
+endif()
+
+FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG master
+)
+# Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
+
+find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
+if (CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
+    message("Could not find cxxbridge, trying to install with `cargo install cxxbridge-cmd'")
+    find_program(CARGO cargo PATHS "$ENV{HOME}/.cargo/bin/")
+    if (CARGO STREQUAL "CARGO-NOTFOUND")
+        message(FATAL_ERROR "Requires cargo available in path, install via rustup https://rustup.rs/")
+    endif()
+    execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
+    find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
+endif()
+
+FetchContent_MakeAvailable(Corrosion)
+
+# include(Cmake/corrosion_cxx.cmake)
+
+
+corrosion_import_crate(MANIFEST_PATH rust_devil/Cargo.toml)
+corrosion_add_cxxbridge(rust_bridge CRATE rust_devil MANIFEST_PATH FILES lib.rs)
+
+
+
 # Dependencies must be included after Platforms.
 include(Dependencies)
 
 add_subdirectory(Source)
 
-# Add the rust lib to the project, which will replace more and more of the CPP codebase
-add_subdirectory(rust_devil)
 
 set(BIN_TARGET devilutionx)
 if(NINTENDO_3DS)
@@ -228,11 +268,11 @@ else()
 endif()
 
 if(NOT UWP_LIB)
-  target_link_libraries(${BIN_TARGET} PRIVATE libdevilutionx)
+  target_link_libraries(${BIN_TARGET} PRIVATE libdevilutionx rust_devil)
 endif()
 
 if(GPERF)
-  target_link_libraries(${BIN_TARGET} PUBLIC ${GPERFTOOLS_LIBRARIES})
+  target_link_libraries(${BIN_TARGET} PUBLIC ${GPERFTOOLS_LIBRARIES} rust_devil)
 endif()
 
 # Must be included after `BIN_TARGET` and `libdevilutionx` are defined.

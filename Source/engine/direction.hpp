@@ -3,20 +3,21 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "rust_bridge/lib.h"
 #include "utils/stdcompat/string_view.hpp"
 
 namespace devilution {
 
-enum class Direction : std::uint8_t {
-	South,
-	SouthWest,
-	West,
-	NorthWest,
-	North,
-	NorthEast,
-	East,
-	SouthEast,
-};
+// enum class Direction : std::uint8_t {
+// 	South,
+// 	SouthWest,
+// 	West,
+// 	NorthWest,
+// 	North,
+// 	NorthEast,
+// 	East,
+// 	SouthEast,
+// };
 
 /** Maps from direction to a left turn from the direction. */
 constexpr Direction Left(Direction facing)
